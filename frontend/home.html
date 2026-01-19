@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Forge - Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="app.js"></script>
+  </head>
+  <body data-page="home">
+    <main>
+      <section class="card reveal">
+        <div class="toolbar">
+          <div>
+            <p class="status-pill">Welcome, <span data-username>Creator</span></p>
+            <h1 class="headline">Quiz Forge</h1>
+          </div>
+          <div class="stack">
+            <button class="btn btn-ghost" type="button" data-refresh-quizzes>
+              Previous Quizzes
+            </button>
+            <button class="btn btn-primary" type="button" data-logout>Log out</button>
+          </div>
+        </div>
+        <div class="split">
+          <div class="panel stack reveal">
+            <label class="label" for="topic">Prompt Box for Quiz Topic</label>
+            <textarea id="topic" name="topic" placeholder="Photosynthesis, Neural Networks, Ancient Rome..."></textarea>
+            <p class="hint">Enter a topic and I’ll quiz you on it</p>
+            <button class="btn btn-accent" type="button" data-create-quiz>Create quiz</button>
+          </div>
+          <div class="panel stack reveal">
+            <strong>Previous Quizzes</strong>
+            <div class="stack" data-quiz-list></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

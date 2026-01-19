@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Forge - Quiz</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="app.js"></script>
+  </head>
+  <body data-page="quiz">
+    <main>
+      <section class="card reveal">
+        <div class="toolbar">
+          <div>
+            <p class="status-pill">Quiz In Progress</p>
+            <h1 class="headline">Current Quiz</h1>
+          </div>
+          <div class="stack">
+            <button class="btn btn-ghost" type="button" data-logout>Log out</button>
+          </div>
+        </div>
+        <p class="subhead">Question <strong data-counter>1/5</strong></p>
+        <div class="panel stack">
+          <p data-question>Loading question...</p>
+          <div class="stack" data-options></div>
+        </div>
+        <div class="feedback" data-feedback>Choose an answer to see the explanation.</div>
+        <div class="toolbar">
+          <button class="btn btn-primary" type="button" data-submit-answer>
+            Submit answer
+          </button>
+          <button class="btn btn-accent" type="button" data-next-question>
+            Next question
+          </button>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

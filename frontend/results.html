@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Forge - Results</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="app.js"></script>
+  </head>
+  <body data-page="results">
+    <main>
+      <section class="card reveal">
+        <div class="toolbar">
+          <div>
+            <p class="status-pill">Quiz Complete</p>
+            <h1 class="headline">Results</h1>
+          </div>
+          <div class="stack">
+            <button class="btn btn-ghost" type="button" data-back>Back</button>
+            <button class="btn btn-primary" type="button" data-logout>Log out</button>
+          </div>
+        </div>
+        <p class="subhead">Score: <strong data-score>0/5</strong></p>
+        <div class="panel">
+          <p><strong>Answer Review</strong></p>
+          <div class="scroll-box stack" data-results-list></div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
