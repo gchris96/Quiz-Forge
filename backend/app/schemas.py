@@ -60,6 +60,7 @@ class QuizTakeOut(BaseModel):
     status: str
     total_questions: int
     quiz_public: Dict[str, Any]
+    message: Optional[str] = None
 
 # Request payload for submitting an answer.
 class AnswerCreate(BaseModel):

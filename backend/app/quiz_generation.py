@@ -8,8 +8,13 @@ from typing import Any, Dict, List, Optional
 
 from bs4 import BeautifulSoup
 
-MODEL_NAME = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+from app.env import load_environment
+
+load_environment()
+
 MAX_SCRAPE_CHARS = 3500
+DEFAULT_OPENAI_MODEL = "gpt-4.1-mini"
+DEFAULT_CLAUDE_MODEL = "claude-3-5-sonnet-20240620"
 
 # Ensure the prompt text appears in the quiz title or question prompts.
 def ensure_prompt_coverage(prompt: str, quiz_content: Dict[str, Any]) -> Dict[str, Any]:
@@ -86,7 +91,7 @@ def _iter_chat_tool_calls(message) -> List[Dict[str, Any]]:
     return calls
 
 # Execute scrape tool calls for responses API and return follow-up output.
-def _run_tool_calls(client: OpenAI, response) -> Optional[str]:
+def _run_tool_calls(client, response, model_name: str) -> Optional[str]:
     tool_calls = _iter_tool_calls(response)
     if not tool_calls:
         return None
@@ -113,7 +118,7 @@ def _run_tool_calls(client: OpenAI, response) -> Optional[str]:
         return None
 
     followup = client.responses.create(
-        model=MODEL_NAME,
+        model=model_name,
         input=tool_outputs,
         previous_response_id=response.id,
     )
@@ -121,7 +126,7 @@ def _run_tool_calls(client: OpenAI, response) -> Optional[str]:
 
 # Execute scrape tool calls for chat completions and return follow-up output.
 def _run_chat_tool_calls(
-    client: OpenAI, messages: List[Dict[str, Any]], message
+    client, messages: List[Dict[str, Any]], message, model_name: str
 ) -> Optional[str]:
     tool_calls = _iter_chat_tool_calls(message)
     if not tool_calls:
@@ -149,20 +154,42 @@ def _run_chat_tool_calls(
         return None
 
     followup = client.chat.completions.create(
-        model=MODEL_NAME,
+        model=model_name,
         messages=messages + [message] + tool_outputs,
     )
     return followup.choices[0].message.content or ""
 
-# Generate quiz content with OpenAI and validate JSON output.
+# Resolve which AI provider to use.
+def get_ai_provider() -> str:
+    provider = os.getenv("AI_PROVIDER", "openai").strip().lower()
+    if provider not in {"openai", "claude"}:
+        raise RuntimeError("AI_PROVIDER must be 'openai' or 'claude'")
+    return provider
+
+# Resolve the env var name for the selected provider's API key.
+def get_ai_api_key_env_var(provider: str) -> str:
+    if provider == "claude":
+        return "CLAUDE_API_KEY"
+    return "OPENAI_API_KEY"
+
+# Fetch the API key for the selected provider.
+def get_ai_api_key(provider: str) -> Optional[str]:
+    return os.getenv(get_ai_api_key_env_var(provider))
+
+# Resolve the model name for the selected provider.
+def get_ai_model_name(provider: str) -> str:
+    if provider == "claude":
+        return os.getenv("CLAUDE_MODEL", DEFAULT_CLAUDE_MODEL)
+    return os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL)
+
+# Generate quiz content with the configured provider and validate JSON output.
 def generate_quiz_content(prompt: str) -> Dict[str, Any]:
-    api_key = os.getenv("OPENAI_API_KEY")
+    provider = get_ai_provider()
+    api_key = get_ai_api_key(provider)
     if not api_key:
-        raise RuntimeError("OPENAI_API_KEY is not configured")
+        raise RuntimeError(f"{get_ai_api_key_env_var(provider)} is not configured")
 
-    from openai import OpenAI
-
-    client = OpenAI(api_key=api_key)
+    model_name = get_ai_model_name(provider)
     system_prompt = (
         "You are a quiz author. Use web search and the scrape_web_page tool "
         "to ground answers. Respond only with raw JSON (no markdown). "
@@ -176,49 +203,71 @@ def generate_quiz_content(prompt: str) -> Dict[str, Any]:
         "one correct_option_key. Keep prompts factual and concise. "
         "Return JSON only."
     )
-    function_tool = {
-        "type": "function",
-        "function": {
-            "name": "scrape_web_page",
-            "description": "Fetch and summarize visible text from a URL.",
-            "parameters": {
-                "type": "object",
-                "properties": {"url": {"type": "string"}},
-                "required": ["url"],
-            },
-        },
-    }
     try:
-        if hasattr(client, "responses"):
-            response = client.responses.create(
-                model=MODEL_NAME,
-                tools=[{"type": "web_search"}, function_tool],
-                input=[
+        if provider == "claude":
+            from anthropic import Anthropic
+
+            client = Anthropic(api_key=api_key)
+            response = client.messages.create(
+                model=model_name,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}],
+                max_tokens=1500,
+            )
+            output_text = ""
+            for block in response.content:
+                if isinstance(block, dict):
+                    output_text += block.get("text", "")
+                else:
+                    output_text += getattr(block, "text", "")
+        else:
+            from openai import OpenAI
+
+            client = OpenAI(api_key=api_key)
+            function_tool = {
+                "type": "function",
+                "function": {
+                    "name": "scrape_web_page",
+                    "description": "Fetch and summarize visible text from a URL.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {"url": {"type": "string"}},
+                        "required": ["url"],
+                    },
+                },
+            }
+            if hasattr(client, "responses"):
+                response = client.responses.create(
+                    model=model_name,
+                    tools=[{"type": "web_search"}, function_tool],
+                    input=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                )
+                output_text = getattr(response, "output_text", None) or ""
+                tool_output = _run_tool_calls(client, response, model_name)
+                if tool_output:
+                    output_text = tool_output
+            else:
+                messages = [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
-                ],
-            )
-            output_text = getattr(response, "output_text", None) or ""
-            tool_output = _run_tool_calls(client, response)
-            if tool_output:
-                output_text = tool_output
-        else:
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ]
-            response = client.chat.completions.create(
-                model=MODEL_NAME,
-                messages=messages,
-                tools=[function_tool],
-            )
-            message = response.choices[0].message
-            output_text = message.content or ""
-            tool_output = _run_chat_tool_calls(client, messages, message)
-            if tool_output:
-                output_text = tool_output
+                ]
+                response = client.chat.completions.create(
+                    model=model_name,
+                    messages=messages,
+                    tools=[function_tool],
+                )
+                message = response.choices[0].message
+                output_text = message.content or ""
+                tool_output = _run_chat_tool_calls(
+                    client, messages, message, model_name
+                )
+                if tool_output:
+                    output_text = tool_output
     except Exception as exc:
-        raise RuntimeError(f"OpenAI request failed: {exc}") from exc
+        raise RuntimeError(f"{provider} request failed: {exc}") from exc
     try:
         quiz_content = _extract_json(output_text)
     except Exception as exc:

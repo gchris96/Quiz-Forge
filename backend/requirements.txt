@@ -4,4 +4,6 @@ uvicorn==0.29.0
 SQLAlchemy==2.0.41
 psycopg[binary]==3.3.2
 openai==1.40.2
+anthropic==0.34.2
+python-dotenv==1.0.1
 beautifulsoup4==4.12.3

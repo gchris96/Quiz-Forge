@@ -14,7 +14,13 @@ from sqlalchemy.orm import Session
 
 from app.database import Base, engine, get_db
 from app.models import Quiz, QuizAnswer, User
-from app.quiz_generation import ensure_prompt_coverage, generate_quiz_content
+from app.quiz_generation import (
+    ensure_prompt_coverage,
+    generate_quiz_content,
+    get_ai_api_key,
+    get_ai_api_key_env_var,
+    get_ai_provider,
+)
 from app.schemas import (
     AnswerCreate,
     AnswerOut,
@@ -371,6 +377,37 @@ def create_generated_quiz(payload: QuizGenerateCreate, db: Session = Depends(get
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
 
     prompt = validate_quiz_prompt(payload.prompt)
+
+    provider = get_ai_provider()
+    api_key = get_ai_api_key(provider)
+    if not api_key:
+        key_env_var = get_ai_api_key_env_var(provider)
+        quiz_content = normalize_quiz_content(build_placeholder_quiz_content(prompt))
+        quiz_public = build_quiz_public(quiz_content)
+        total_questions = len(quiz_content["questions"])
+
+        quiz = Quiz(
+            user_id=payload.user_id,
+            prompt=prompt,
+            status="in_progress",
+            total_questions=total_questions,
+            quiz_content=quiz_content,
+            quiz_public=quiz_public,
+        )
+        db.add(quiz)
+        db.commit()
+        db.refresh(quiz)
+        return QuizTakeOut(
+            id=quiz.id,
+            prompt=quiz.prompt,
+            status=quiz.status,
+            total_questions=quiz.total_questions,
+            quiz_public=quiz.quiz_public,
+            message=(
+                f"Unable to create quiz: {key_env_var} is not configured. "
+                "Defaulting to placeholder quiz."
+            ),
+        )
 
     try:
         quiz_content = generate_quiz_content(prompt)

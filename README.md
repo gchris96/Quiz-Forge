@@ -37,7 +37,10 @@ notes, and manual Postgres queries.
    - `pip install -r backend/requirements.txt -r backend/requirements-dev.txt`
 3. Create a local env file:
    - `cp .env.example .env`
-   - Update `OPENAI_API_KEY` and database URLs as needed.
+   - Set `AI_PROVIDER` to `openai` or `claude` (defaults to `openai`).
+   - Update `OPENAI_API_KEY` or `CLAUDE_API_KEY` plus optional model vars.
+   - Update database URLs as needed.
+   - `.env` is auto-loaded when the API starts.
 4. Start Postgres (Homebrew example):
    - `brew install postgresql@16`
    - `brew services start postgresql@16`
@@ -47,6 +50,14 @@ notes, and manual Postgres queries.
    - `TEST_DATABASE_URL=postgresql+psycopg://localhost/quiz_forge_test pytest`
 7. Run the API:
    - `DATABASE_URL=postgresql+psycopg://localhost/quiz_forge uvicorn app.main:app --reload --app-dir backend`
+8. Troubleshoot common issues:
+   - Check API logs in the terminal running Uvicorn.
+   - Verify the API responds: `curl -i http://127.0.0.1:8000/docs`
+   - Confirm `.env` is loaded: `python -c "import os; print(os.getenv('AI_PROVIDER'), bool(os.getenv('OPENAI_API_KEY') or os.getenv('CLAUDE_API_KEY')))"`.
+   - Confirm Postgres is running: `brew services list | rg postgresql` (or `psql -h localhost -d quiz_forge -c 'select 1'`).
+   - See what is listening on port 8000: `lsof -nP -iTCP:8000 -sTCP:LISTEN`
+   - Stop the process: `kill <PID>`
+   - Run on a different port: `uvicorn app.main:app --reload --app-dir backend --port 8001`
 
 ## Frontend usage
 1. Serve the frontend (from the repo root):

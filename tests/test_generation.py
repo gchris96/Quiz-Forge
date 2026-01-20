@@ -48,6 +48,87 @@ def test_generate_quiz_creates_quiz_and_returns_public(
     quiz_ids = {quiz["id"] for quiz in list_response.json()}
     assert payload["id"] in quiz_ids
 
+# Fall back to placeholder quiz when the OpenAI API key is missing.
+def test_generate_quiz_defaults_to_placeholder_when_api_key_missing(
+    client, monkeypatch
+):
+    prompt = "Physics"
+
+    monkeypatch.setenv("AI_PROVIDER", "openai")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    def fail_if_called(prompt_value):
+        raise AssertionError("generate_quiz_content should not be called")
+
+    monkeypatch.setattr("app.main.generate_quiz_content", fail_if_called)
+
+    user_response = client.post(
+        "/users",
+        json={"username": "placeholder", "password": "secret"},
+    )
+    assert user_response.status_code == 201
+    user_id = user_response.json()["id"]
+
+    quiz_response = client.post(
+        "/quizzes/generate",
+        json={"user_id": user_id, "prompt": prompt},
+    )
+    assert quiz_response.status_code == 201
+    payload = quiz_response.json()
+
+    assert (
+        payload["message"]
+        == "Unable to create quiz: OPENAI_API_KEY is not configured. "
+        "Defaulting to placeholder quiz."
+    )
+    assert prompt in payload["quiz_public"]["title"]
+    assert "Placeholder Quiz" in payload["quiz_public"]["title"]
+    assert len(payload["quiz_public"]["questions"]) == 5
+    assert "correct_option_key" not in payload["quiz_public"]["questions"][0]
+
+    list_response = client.get(f"/quizzes?user_id={user_id}")
+    assert list_response.status_code == 200
+    quiz_ids = {quiz["id"] for quiz in list_response.json()}
+    assert payload["id"] in quiz_ids
+
+# Fall back to placeholder quiz when the Claude API key is missing.
+def test_generate_quiz_defaults_to_placeholder_when_claude_key_missing(
+    client, monkeypatch
+):
+    prompt = "Chemistry"
+
+    monkeypatch.setenv("AI_PROVIDER", "claude")
+    monkeypatch.delenv("CLAUDE_API_KEY", raising=False)
+
+    def fail_if_called(prompt_value):
+        raise AssertionError("generate_quiz_content should not be called")
+
+    monkeypatch.setattr("app.main.generate_quiz_content", fail_if_called)
+
+    user_response = client.post(
+        "/users",
+        json={"username": "claude-placeholder", "password": "secret"},
+    )
+    assert user_response.status_code == 201
+    user_id = user_response.json()["id"]
+
+    quiz_response = client.post(
+        "/quizzes/generate",
+        json={"user_id": user_id, "prompt": prompt},
+    )
+    assert quiz_response.status_code == 201
+    payload = quiz_response.json()
+
+    assert (
+        payload["message"]
+        == "Unable to create quiz: CLAUDE_API_KEY is not configured. "
+        "Defaulting to placeholder quiz."
+    )
+    assert prompt in payload["quiz_public"]["title"]
+    assert "Placeholder Quiz" in payload["quiz_public"]["title"]
+    assert len(payload["quiz_public"]["questions"]) == 5
+    assert "correct_option_key" not in payload["quiz_public"]["questions"][0]
+
 # Reject quizzes where any question has fewer than four options.
 def test_quiz_rejects_invalid_option_count(client, build_quiz_content):
     user_response = client.post(
