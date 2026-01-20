@@ -9,18 +9,9 @@ AI-Powered Knowledge Quiz Builder
 - Quiz results include score, correct answers, and a review list
 - Past quizzes are stored and listed per user
 
-## System architecture
-- Frontend: static HTML/CSS/JS pages in `frontend/` with localStorage session state
-- Backend: FastAPI app in `backend/` with SQLAlchemy models and a Postgres database
-- AI layer: OpenAI API called from `backend/app/quiz_generation.py` to create quizzes
-- Retrieval: the model can use built-in web search plus a scrape tool to ground answers
-
-## Manual Postgres access
-- Connect with psql: `psql postgresql://postgres:postgres@localhost:5432/quiz_forge`
-- List quizzes: `SELECT id, user_id, prompt, status, created_at FROM quizzes ORDER BY created_at DESC;`
-- Inspect quiz content: `SELECT quiz_content FROM quizzes WHERE id = '<quiz_id>';`
-- Review answers: `SELECT quiz_id, question_index, selected_option_key, is_correct FROM quiz_answers WHERE quiz_id = '<quiz_id>';`
-- Query a user's score for a quiz: `SELECT user_id, correct_count, total_questions, score_percent FROM quizzes WHERE id = '<quiz_id>' AND user_id = '<user_id>';`
+## Architecture notes
+See `docs/architecture.md` for system architecture, request/response flow, data model
+notes, and manual Postgres queries.
 
 ## Technical decisions and tradeoffs
 - FastAPI keeps the API surface small while supporting typed request/response models; a
