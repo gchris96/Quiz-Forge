@@ -20,9 +20,11 @@ notes, and manual Postgres queries.
 - Postgres + SQLAlchemy provides durable quiz history and result snapshots; SQLite
   would simplify local setup but is less suitable for concurrent usage or production
   migrations.
-- OpenAI responses API is used when available; chat completions is a fallback to keep
-  compatibility with older SDKs. A self-hosted model would reduce vendor dependency
-  but adds deployment and latency complexity.
+- The selected provider API is used when available; OpenAI chat completions remains
+  a fallback to keep compatibility with older SDKs. A self-hosted model would reduce
+  vendor dependency but adds deployment and latency complexity.
+- AI generation supports either OpenAI or Claude via `AI_PROVIDER` so teams can use
+  existing accounts; this improves portability but adds configuration complexity.
 - Quiz content is normalized server-side to guarantee 5 questions, 4 options, and a
   stable schema for the frontend; letting the frontend normalize would reduce backend
   logic but risks inconsistent validation and data integrity.
@@ -50,7 +52,7 @@ notes, and manual Postgres queries.
    - `TEST_DATABASE_URL=postgresql+psycopg://localhost/quiz_forge_test pytest`
 7. Run the API:
    - `DATABASE_URL=postgresql+psycopg://localhost/quiz_forge uvicorn app.main:app --reload --app-dir backend`
-8. Troubleshoot common issues:
+8. Troubleshoot issues:
    - Check API logs in the terminal running Uvicorn.
    - Verify the API responds: `curl -i http://127.0.0.1:8000/docs`
    - Confirm `.env` is loaded: `python -c "import os; print(os.getenv('AI_PROVIDER'), bool(os.getenv('OPENAI_API_KEY') or os.getenv('CLAUDE_API_KEY')))"`.
