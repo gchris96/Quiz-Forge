@@ -1,3 +1,4 @@
+# SQLAlchemy ORM models for users, quizzes, and answers.
 import uuid
 
 from sqlalchemy import (
@@ -18,11 +19,11 @@ from sqlalchemy.types import JSON
 
 from app.database import Base
 
-
+# Generate a UUID string for primary keys.
 def _uuid_str():
     return str(uuid.uuid4())
 
-
+# User account record.
 class User(Base):
     __tablename__ = "users"
 
@@ -32,7 +33,7 @@ class User(Base):
     password_salt = Column(String(255), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-
+# Quiz metadata and stored quiz content.
 class Quiz(Base):
     __tablename__ = "quizzes"
 
@@ -57,7 +58,7 @@ class Quiz(Base):
         Index("quizzes_user_status_idx", "user_id", "status"),
     )
 
-
+# Answer record for a specific quiz question.
 class QuizAnswer(Base):
     __tablename__ = "quiz_answers"
 

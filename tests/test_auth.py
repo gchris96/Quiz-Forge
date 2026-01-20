@@ -1,6 +1,7 @@
+# User auth and session tests.
 from pathlib import Path
 
-
+# Verify signup returns a user payload and persists the record.
 def test_signup_creates_user_and_returns_message(client):
     response = client.post(
         "/users",
@@ -23,7 +24,7 @@ def test_signup_creates_user_and_returns_message(client):
     finally:
         db.close()
 
-
+# Confirm missing users receive a 401 with a helpful message.
 def test_login_missing_user_prompts_account_creation(client):
     response = client.post(
         "/sessions",
@@ -33,7 +34,7 @@ def test_login_missing_user_prompts_account_creation(client):
     assert response.status_code == 401
     assert response.json()["detail"] == "account not found. create an account."
 
-
+# Ensure the login page includes the expected wiring and script.
 def test_login_page_wires_app_js():
     root = Path(__file__).resolve().parents[1]
     index_html = root / "frontend" / "index.html"
@@ -47,7 +48,7 @@ def test_login_page_wires_app_js():
     assert "app.js" in index_content
     assert 'window.location.href = "home.html";' in app_content
 
-
+# Validate that the home page includes quiz list wiring and refresh controls.
 def test_home_page_wires_quiz_list_and_refresh():
     root = Path(__file__).resolve().parents[1]
     home_html = root / "frontend" / "home.html"
@@ -62,7 +63,7 @@ def test_home_page_wires_quiz_list_and_refresh():
     assert "data-refresh-quizzes" in home_content
     assert "/quizzes?user_id=" in app_content
 
-
+# Confirm the quiz page includes required action buttons.
 def test_quiz_page_wires_buttons():
     root = Path(__file__).resolve().parents[1]
     quiz_html = root / "frontend" / "quiz.html"
@@ -73,7 +74,7 @@ def test_quiz_page_wires_buttons():
     assert "data-submit-answer" in quiz_content
     assert "data-next-question" in quiz_content
 
-
+# Confirm the results page includes navigation and logout controls.
 def test_results_page_wires_buttons():
     root = Path(__file__).resolve().parents[1]
     results_html = root / "frontend" / "results.html"

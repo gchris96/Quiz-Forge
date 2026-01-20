@@ -1,3 +1,4 @@
+# Runtime dependencies for the backend API.
 fastapi==0.110.0
 uvicorn==0.29.0
 SQLAlchemy==2.0.41

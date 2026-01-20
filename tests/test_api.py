@@ -1,6 +1,7 @@
+# API endpoint tests for quiz flows.
 import pytest
 
-
+# Validate a full quiz flow including scoring and results snapshot.
 def test_quiz_flow(client, sample_quiz_content):
     user_response = client.post(
         "/users",
@@ -58,7 +59,7 @@ def test_quiz_flow(client, sample_quiz_content):
     assert results["score"]["total_questions"] == 5
     assert results["score"]["score_percent"] == 20.0
 
-
+# Ensure the API rejects quizzes that do not have exactly five questions.
 @pytest.mark.parametrize("question_count", [4, 6])
 def test_quiz_rejects_invalid_question_count(
     client, question_count, build_quiz_content
@@ -81,7 +82,7 @@ def test_quiz_rejects_invalid_question_count(
     assert quiz_response.status_code == 400
     assert quiz_response.json()["detail"] == "quiz_content must include exactly 5 questions"
 
-
+# Verify that quizzes with exactly five questions are accepted.
 def test_quiz_allows_five_questions(client, build_quiz_content):
     user_response = client.post(
         "/users",
@@ -100,7 +101,7 @@ def test_quiz_allows_five_questions(client, build_quiz_content):
     )
     assert quiz_response.status_code == 201
 
-
+# Ensure the placeholder quiz endpoint creates a usable quiz payload.
 def test_placeholder_quiz_creation(client):
     user_response = client.post(
         "/users",

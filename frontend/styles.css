@@ -1,3 +1,5 @@
+/* Frontend styling and animations. */
+/* Theme tokens */
 :root {
   --ink: #1f2a24;
   --mist: #f7f1e6;
@@ -15,6 +17,7 @@
   box-sizing: border-box;
 }
 
+/* Global layout and background */
 body {
   margin: 0;
   font-family: "Garamond", "Palatino Linotype", "Book Antiqua", Palatino, serif;
@@ -30,10 +33,12 @@ body {
   padding: 32px 20px;
 }
 
+/* Page width container */
 main {
   width: min(980px, 100%);
 }
 
+/* Primary card surface */
 .card {
   background: var(--cream);
   border-radius: 28px;
@@ -70,6 +75,7 @@ main {
   z-index: 1;
 }
 
+/* Hero headline styling */
 .headline {
   font-family: "Copperplate", "Palatino Linotype", "Book Antiqua", Palatino, serif;
   text-transform: uppercase;
@@ -78,18 +84,21 @@ main {
   margin: 0 0 8px;
 }
 
+/* Supporting text style */
 .subhead {
   margin: 0 0 28px;
   font-size: 18px;
   max-width: 520px;
 }
 
+/* Two-column layout for home panels */
 .split {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 24px;
 }
 
+/* Panel surface for grouped content */
 .panel {
   background: rgba(247, 241, 230, 0.9);
   border-radius: 20px;
@@ -97,6 +106,7 @@ main {
   border: 1px solid rgba(31, 42, 36, 0.08);
 }
 
+/* Form labels */
 .label {
   display: block;
   font-weight: 600;
@@ -104,6 +114,7 @@ main {
   letter-spacing: 0.02em;
 }
 
+/* Form controls */
 input,
 textarea,
 select {
@@ -121,12 +132,14 @@ textarea {
   resize: vertical;
 }
 
+/* Helper and error hints */
 .hint {
   margin-top: 10px;
   font-size: 14px;
   color: rgba(31, 42, 36, 0.7);
 }
 
+/* Button base styles */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -142,18 +155,21 @@ textarea {
   text-decoration: none;
 }
 
+/* Primary action button */
 .btn-primary {
   background: var(--deep);
   color: var(--cream);
   box-shadow: 0 12px 24px rgba(38, 70, 83, 0.2);
 }
 
+/* Accent action button */
 .btn-accent {
   background: var(--coral);
   color: #fff7f1;
   box-shadow: 0 12px 24px rgba(224, 122, 95, 0.25);
 }
 
+/* Secondary button style */
 .btn-ghost {
   background: transparent;
   border: 1px solid rgba(38, 70, 83, 0.4);
@@ -165,11 +181,13 @@ textarea {
   box-shadow: 0 16px 32px rgba(38, 70, 83, 0.18);
 }
 
+/* Vertical spacing helper */
 .stack {
   display: grid;
   gap: 16px;
 }
 
+/* Top-of-card toolbars */
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -179,6 +197,7 @@ textarea {
   margin-bottom: 24px;
 }
 
+/* Pill badge styling */
 .status-pill {
   padding: 6px 14px;
   border-radius: 999px;
@@ -188,6 +207,7 @@ textarea {
   font-size: 14px;
 }
 
+/* Quiz option row */
 .quiz-option {
   display: flex;
   gap: 12px;
@@ -203,6 +223,7 @@ textarea {
   margin-top: 4px;
 }
 
+/* Answer feedback panel */
 .feedback {
   padding: 16px;
   border-radius: 16px;
@@ -213,6 +234,7 @@ textarea {
   background: rgba(224, 122, 95, 0.15);
 }
 
+/* Result item rows */
 .result-item {
   border-left: 4px solid transparent;
 }
@@ -239,12 +261,14 @@ textarea {
   color: var(--coral);
 }
 
+/* Scrollable result list */
 .scroll-box {
   max-height: 280px;
   overflow-y: auto;
   padding-right: 8px;
 }
 
+/* Staggered reveal animation */
 .reveal {
   animation: rise 0.7s ease both;
 }
@@ -261,6 +285,7 @@ textarea {
   animation-delay: 0.24s;
 }
 
+/* Reveal keyframes */
 @keyframes rise {
   from {
     opacity: 0;
@@ -272,6 +297,7 @@ textarea {
   }
 }
 
+/* Mobile adjustments */
 @media (max-width: 720px) {
   .card {
     padding: 24px;

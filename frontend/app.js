@@ -1,6 +1,8 @@
+// Frontend state management and API calls.
 const STORAGE_KEY = "quizForge";
 const API_BASE = "http://localhost:8000";
 
+// Load persisted UI state from localStorage with safe defaults.
 const loadState = () => {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
@@ -27,10 +29,12 @@ const loadState = () => {
   }
 };
 
+// Persist the current UI state to localStorage.
 const saveState = (state) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 };
 
+// Merge updates into stored state and persist.
 const updateState = (updates) => {
   const state = loadState();
   const next = { ...state, ...updates };
@@ -38,6 +42,7 @@ const updateState = (updates) => {
   return next;
 };
 
+// Clear all session-related state on logout.
 const clearSession = () => {
   saveState({
     user: null,
@@ -49,10 +54,12 @@ const clearSession = () => {
   });
 };
 
+// Record the currently authenticated user.
 const setActiveUser = (user) => {
   updateState({ user });
 };
 
+// Redirect to login if no user is in state.
 const requireUser = () => {
   const state = loadState();
   if (!state.user) {
@@ -61,6 +68,7 @@ const requireUser = () => {
   return state;
 };
 
+// Wrap fetch calls with JSON handling and error surfacing.
 const apiRequest = async (path, options = {}) => {
   const headers = {
     "Content-Type": "application/json",
@@ -89,6 +97,7 @@ const apiRequest = async (path, options = {}) => {
   return response.json();
 };
 
+// Render or update an inline form error message.
 const renderFormError = (form, message) => {
   let error = form.querySelector("[data-form-error]");
   if (!error) {
@@ -100,6 +109,7 @@ const renderFormError = (form, message) => {
   error.textContent = message;
 };
 
+// Wire up the login form workflow.
 const initLogin = () => {
   const form = document.querySelector("[data-login-form]");
   if (!form) {
@@ -126,6 +136,7 @@ const initLogin = () => {
   });
 };
 
+// Wire up the signup form workflow.
 const initSignup = () => {
   const form = document.querySelector("[data-signup-form]");
   if (!form) {
@@ -152,6 +163,7 @@ const initSignup = () => {
   });
 };
 
+// Render the user's quiz history list.
 const renderQuizList = (list, quizzes) => {
   list.innerHTML = "";
   if (!quizzes.length) {
@@ -177,6 +189,7 @@ const renderQuizList = (list, quizzes) => {
   });
 };
 
+// Fetch quiz history and update the list UI.
 const loadQuizList = (list, userId) => {
   list.innerHTML = "<p>Loading quizzes...</p>";
   apiRequest(`/quizzes?user_id=${encodeURIComponent(userId)}`)
@@ -189,6 +202,7 @@ const loadQuizList = (list, userId) => {
     });
 };
 
+// Wire up the home dashboard interactions.
 const initHome = () => {
   const state = requireUser();
   const list = document.querySelector("[data-quiz-list]");
@@ -240,12 +254,14 @@ const initHome = () => {
   }
 };
 
+// Build a user-facing feedback line from API feedback.
 const formatFeedback = (feedback) => {
   const verdict = feedback.is_correct ? "Correct! :)" : "Incorrect :(";
   const explanation = feedback.explanation ? ` ${feedback.explanation}` : "";
   return `${verdict}${explanation}`;
 };
 
+// Render the current quiz question and options.
 const renderQuestion = (state, elements) => {
   const { counter, prompt, options, feedback, submit, next } = elements;
   const quizPublic = state.currentQuizPublic;
@@ -280,6 +296,7 @@ const renderQuestion = (state, elements) => {
   }
 };
 
+// Wire up quiz navigation and submission.
 const initQuiz = () => {
   const state = requireUser();
   if (!state.currentQuizId || !state.currentQuizPublic) {
@@ -347,6 +364,7 @@ const initQuiz = () => {
   }
 };
 
+// Resolve an option key to a display string.
 const optionTextForKey = (options, key) => {
   if (!options || !key) {
     return "No answer";
@@ -355,6 +373,7 @@ const optionTextForKey = (options, key) => {
   return match ? `${match.key}. ${match.text}` : "Unknown option";
 };
 
+// Load and render completed quiz results.
 const initResults = () => {
   const state = requireUser();
   const summary = document.querySelector("[data-score]");
@@ -426,6 +445,7 @@ const initResults = () => {
   }
 };
 
+// Initialize the correct page controller on DOM ready.
 const init = () => {
   const page = document.body?.dataset?.page;
   if (!page) {

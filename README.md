@@ -1,3 +1,5 @@
+<!-- Project overview, architecture, and setup instructions. -->
+
 # Quiz-Forge
 AI-Powered Knowledge Quiz Builder
 
@@ -13,13 +15,28 @@ AI-Powered Knowledge Quiz Builder
 - AI layer: OpenAI API called from `backend/app/quiz_generation.py` to create quizzes
 - Retrieval: the model can use built-in web search plus a scrape tool to ground answers
 
+## Manual Postgres access
+- Connect with psql: `psql postgresql://postgres:postgres@localhost:5432/quiz_forge`
+- List quizzes: `SELECT id, user_id, prompt, status, created_at FROM quizzes ORDER BY created_at DESC;`
+- Inspect quiz content: `SELECT quiz_content FROM quizzes WHERE id = '<quiz_id>';`
+- Review answers: `SELECT quiz_id, question_index, selected_option_key, is_correct FROM quiz_answers WHERE quiz_id = '<quiz_id>';`
+- Query a user's score for a quiz: `SELECT user_id, correct_count, total_questions, score_percent FROM quizzes WHERE id = '<quiz_id>' AND user_id = '<user_id>';`
+
 ## Technical decisions and tradeoffs
-- FastAPI keeps the API surface small while supporting typed request/response models.
-- Postgres + SQLAlchemy provides durable quiz history and result snapshots.
-- OpenAI responses API is used when available; chat completions is a fallback.
+- FastAPI keeps the API surface small while supporting typed request/response models; a
+  Flask app would be lighter but less structured, and Django would add more ORM and
+  admin overhead than needed for this MVP.
+- Postgres + SQLAlchemy provides durable quiz history and result snapshots; SQLite
+  would simplify local setup but is less suitable for concurrent usage or production
+  migrations.
+- OpenAI responses API is used when available; chat completions is a fallback to keep
+  compatibility with older SDKs. A self-hosted model would reduce vendor dependency
+  but adds deployment and latency complexity.
 - Quiz content is normalized server-side to guarantee 5 questions, 4 options, and a
-  stable schema for the frontend.
-- Results are snapshotted at completion to avoid recomputation and simplify review.
+  stable schema for the frontend; letting the frontend normalize would reduce backend
+  logic but risks inconsistent validation and data integrity.
+- Results are snapshotted at completion to avoid recomputation and simplify review;
+  recomputing on demand would save storage but can drift if content changes later.
 
 ## Local setup
 1. Create a virtual environment:

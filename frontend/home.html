@@ -1,3 +1,4 @@
+<!-- Home/dashboard page for quiz creation. -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -9,7 +10,9 @@
   </head>
   <body data-page="home">
     <main>
+      <!-- Home dashboard card -->
       <section class="card reveal">
+        <!-- Header toolbar with actions -->
         <div class="toolbar">
           <div>
             <p class="status-pill">Welcome, <span data-username>Creator</span></p>
@@ -23,12 +26,14 @@
           </div>
         </div>
         <div class="split">
+          <!-- Quiz creation panel -->
           <div class="panel stack reveal">
             <label class="label" for="topic">Prompt Box for Quiz Topic</label>
             <textarea id="topic" name="topic" placeholder="Photosynthesis, Neural Networks, Ancient Rome..."></textarea>
             <p class="hint">Enter a topic and I’ll quiz you on it</p>
             <button class="btn btn-accent" type="button" data-create-quiz>Create quiz</button>
           </div>
+          <!-- Quiz history panel -->
           <div class="panel stack reveal">
             <strong>Previous Quizzes</strong>
             <div class="stack" data-quiz-list></div>

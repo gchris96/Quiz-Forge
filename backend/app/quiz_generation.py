@@ -1,3 +1,4 @@
+# Quiz generation via OpenAI with optional web scraping.
 import json
 import os
 import re
@@ -10,7 +11,7 @@ from bs4 import BeautifulSoup
 MODEL_NAME = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 MAX_SCRAPE_CHARS = 3500
 
-
+# Ensure the prompt text appears in the quiz title or question prompts.
 def ensure_prompt_coverage(prompt: str, quiz_content: Dict[str, Any]) -> Dict[str, Any]:
     normalized = deepcopy(quiz_content)
     prompt_text = prompt.strip()
@@ -26,7 +27,7 @@ def ensure_prompt_coverage(prompt: str, quiz_content: Dict[str, Any]) -> Dict[st
         normalized["title"] = f"{prompt_text} Quiz"
     return normalized
 
-
+# Fetch a URL and return the cleaned, visible text for grounding.
 def scrape_web_page(url: str) -> str:
     try:
         request = urllib.request.Request(
@@ -44,7 +45,7 @@ def scrape_web_page(url: str) -> str:
     text = " ".join(soup.stripped_strings)
     return text[:MAX_SCRAPE_CHARS]
 
-
+# Parse JSON from a raw model response, with regex fallback.
 def _extract_json(payload: str) -> Dict[str, Any]:
     try:
         return json.loads(payload)
@@ -54,7 +55,7 @@ def _extract_json(payload: str) -> Dict[str, Any]:
             raise ValueError("quiz response was not valid JSON")
         return json.loads(match.group(0))
 
-
+# Extract tool call records from a responses API output list.
 def _iter_tool_calls(response) -> List[Dict[str, Any]]:
     calls = []
     output = getattr(response, "output", None) or []
@@ -68,7 +69,7 @@ def _iter_tool_calls(response) -> List[Dict[str, Any]]:
         calls.append({"name": name, "arguments": arguments, "id": tool_call_id})
     return calls
 
-
+# Extract tool call records from a chat completion message.
 def _iter_chat_tool_calls(message) -> List[Dict[str, Any]]:
     tool_calls = getattr(message, "tool_calls", None) or []
     calls = []
@@ -84,7 +85,7 @@ def _iter_chat_tool_calls(message) -> List[Dict[str, Any]]:
         )
     return calls
 
-
+# Execute scrape tool calls for responses API and return follow-up output.
 def _run_tool_calls(client: OpenAI, response) -> Optional[str]:
     tool_calls = _iter_tool_calls(response)
     if not tool_calls:
@@ -118,7 +119,7 @@ def _run_tool_calls(client: OpenAI, response) -> Optional[str]:
     )
     return getattr(followup, "output_text", None) or ""
 
-
+# Execute scrape tool calls for chat completions and return follow-up output.
 def _run_chat_tool_calls(
     client: OpenAI, messages: List[Dict[str, Any]], message
 ) -> Optional[str]:
@@ -153,7 +154,7 @@ def _run_chat_tool_calls(
     )
     return followup.choices[0].message.content or ""
 
-
+# Generate quiz content with OpenAI and validate JSON output.
 def generate_quiz_content(prompt: str) -> Dict[str, Any]:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:

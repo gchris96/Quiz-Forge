@@ -1,3 +1,4 @@
+# SQLAlchemy engine/session setup and DB dependency.
 import os
 
 from sqlalchemy import create_engine
@@ -13,7 +14,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-
+# Provide a SQLAlchemy session for request-scoped usage.
 def get_db():
     db = SessionLocal()
     try:

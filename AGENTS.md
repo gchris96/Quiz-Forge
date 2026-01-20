@@ -1,3 +1,5 @@
+<!-- Codex project rules and workflow instructions. -->
+
 # Codex Project Rules
 
 ## Role

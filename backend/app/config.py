@@ -1,8 +1,9 @@
+# Environment file loading helpers.
 import os
 from pathlib import Path
 from typing import Dict
 
-
+# Load key/value pairs from a .env-style file into process environment.
 def load_env_file(path: Path) -> Dict[str, str]:
     if not path.exists():
         return {}
@@ -20,7 +21,7 @@ def load_env_file(path: Path) -> Dict[str, str]:
             loaded[key] = value
     return loaded
 
-
+# Load the repo-root .env file and return any values that were set.
 def load_env() -> Dict[str, str]:
     root = Path(__file__).resolve().parents[2]
     return load_env_file(root / ".env")

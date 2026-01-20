@@ -1,3 +1,4 @@
+# FastAPI app, routes, and quiz flow handlers.
 from copy import deepcopy
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -30,6 +31,8 @@ from app.schemas import (
 )
 from app.security import generate_salt, hash_password
 
+
+# Create database tables on app startup.
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
@@ -48,12 +51,13 @@ app.add_middleware(
 )
 
 
+# Format datetimes as ISO-8601 strings with UTC fallback.
 def to_iso(dt: datetime) -> str:
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return dt.isoformat()
 
-
+# Validate and normalize quiz content to the expected schema.
 def normalize_quiz_content(quiz_content: Dict) -> Dict:
     questions = quiz_content.get("questions")
     if not isinstance(questions, list) or not questions:
@@ -112,7 +116,7 @@ def normalize_quiz_content(quiz_content: Dict) -> Dict:
     normalized["questions"] = normalized_questions
     return normalized
 
-
+# Strip answer keys/explanations for the public quiz payload.
 def build_quiz_public(quiz_content: Dict) -> Dict:
     public_content = deepcopy(quiz_content)
     for question in public_content.get("questions", []):
@@ -120,7 +124,7 @@ def build_quiz_public(quiz_content: Dict) -> Dict:
         question.pop("explanation", None)
     return public_content
 
-
+# Fetch a question by its index or raise a validation error.
 def question_by_index(quiz_content: Dict, question_index: int) -> Dict:
     for question in quiz_content.get("questions", []):
         if question.get("index") == question_index:
@@ -130,7 +134,7 @@ def question_by_index(quiz_content: Dict, question_index: int) -> Dict:
         detail="question_index not found",
     )
 
-
+# Build an immutable results snapshot for completed quizzes.
 def build_results_snapshot(
     quiz: Quiz, answers: List[QuizAnswer], completed_at: datetime
 ) -> Dict:
@@ -163,7 +167,7 @@ def build_results_snapshot(
         "questions": questions,
     }
 
-
+# Create placeholder quiz content when AI generation is unavailable.
 def build_placeholder_quiz_content(prompt: str) -> Dict:
     topic = prompt.strip() or "General Knowledge"
     return {
@@ -227,7 +231,7 @@ def build_placeholder_quiz_content(prompt: str) -> Dict:
         ],
     }
 
-
+# Enforce quiz prompt length and allowed characters.
 def validate_quiz_prompt(prompt: str) -> str:
     cleaned = prompt.strip()
     if not cleaned:
@@ -249,7 +253,7 @@ def validate_quiz_prompt(prompt: str) -> str:
             )
     return " ".join(words)
 
-
+# Create a new user and persist hashed credentials.
 @app.post("/users", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     salt = generate_salt()
@@ -275,7 +279,7 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
         message="account created",
     )
 
-
+# Verify credentials and return a session payload.
 @app.post("/sessions", response_model=SessionOut)
 def create_session(payload: SessionCreate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == payload.username).first()
@@ -289,7 +293,7 @@ def create_session(payload: SessionCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid")
     return SessionOut(user_id=user.id, username=user.username)
 
-
+# Store a quiz with client-provided content.
 @app.post("/quizzes", response_model=QuizOut, status_code=status.HTTP_201_CREATED)
 def create_quiz(payload: QuizCreate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == payload.user_id).first()
@@ -323,7 +327,7 @@ def create_quiz(payload: QuizCreate, db: Session = Depends(get_db)):
         score_percent=float(quiz.score_percent) if quiz.score_percent else None,
     )
 
-
+# Persist a placeholder quiz for a user.
 @app.post(
     "/quizzes/placeholder",
     response_model=QuizTakeOut,
@@ -359,7 +363,7 @@ def create_placeholder_quiz(
         quiz_public=quiz.quiz_public,
     )
 
-
+# Generate quiz content with AI and persist the quiz.
 @app.post("/quizzes/generate", response_model=QuizTakeOut, status_code=status.HTTP_201_CREATED)
 def create_generated_quiz(payload: QuizGenerateCreate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == payload.user_id).first()
@@ -405,7 +409,7 @@ def create_generated_quiz(payload: QuizGenerateCreate, db: Session = Depends(get
         quiz_public=quiz.quiz_public,
     )
 
-
+# Return quiz metadata for a user.
 @app.get("/quizzes", response_model=List[QuizOut])
 def list_quizzes(user_id: str = Query(...), db: Session = Depends(get_db)):
     quizzes = (
@@ -431,7 +435,7 @@ def list_quizzes(user_id: str = Query(...), db: Session = Depends(get_db)):
         )
     return results
 
-
+# Return the public quiz payload for taking the quiz.
 @app.get("/quizzes/{quiz_id}", response_model=QuizTakeOut)
 def get_quiz(quiz_id: str, db: Session = Depends(get_db)):
     quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
@@ -445,7 +449,7 @@ def get_quiz(quiz_id: str, db: Session = Depends(get_db)):
         quiz_public=quiz.quiz_public,
     )
 
-
+# Record an answer and finalize results when complete.
 @app.post("/quizzes/{quiz_id}/answers", response_model=AnswerOut)
 def submit_answer(quiz_id: str, payload: AnswerCreate, db: Session = Depends(get_db)):
     quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
@@ -506,7 +510,7 @@ def submit_answer(quiz_id: str, payload: AnswerCreate, db: Session = Depends(get
         total_questions=quiz.total_questions,
     )
 
-
+# Return results for a completed quiz.
 @app.get("/quizzes/{quiz_id}/results", response_model=ResultsOut)
 def get_results(quiz_id: str, db: Session = Depends(get_db)):
     quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()

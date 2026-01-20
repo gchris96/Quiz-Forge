@@ -1,3 +1,4 @@
+# Pytest fixtures and test database setup.
 import importlib
 import os
 import sys
@@ -5,9 +6,10 @@ import sys
 import pytest
 from fastapi.testclient import TestClient
 
-
+# Build a normalized quiz payload for reuse in tests.
 @pytest.fixture()
 def build_quiz_content():
+    # Construct quiz content with a configurable number of questions.
     def _build(prompt: str, question_count: int = 5):
         questions = []
         for idx in range(1, question_count + 1):
@@ -30,6 +32,7 @@ def build_quiz_content():
     return _build
 
 
+# Provide a stable sample quiz payload with known correct answers.
 @pytest.fixture()
 def sample_quiz_content():
     return {
@@ -98,7 +101,7 @@ def sample_quiz_content():
         ],
     }
 
-
+# Provide a FastAPI test client backed by a temporary test database.
 @pytest.fixture()
 def client():
     test_database_url = os.getenv(

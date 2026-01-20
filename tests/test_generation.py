@@ -1,6 +1,7 @@
+# Quiz generation and normalization tests.
 from app.quiz_generation import ensure_prompt_coverage, scrape_web_page
 
-
+# Ensure the prompt text appears in the generated title or prompts.
 def test_ensure_prompt_coverage_injects_prompt(build_quiz_content):
     quiz_content = build_quiz_content("Astronomy")
     quiz_content["title"] = "Sample Quiz"
@@ -10,7 +11,7 @@ def test_ensure_prompt_coverage_injects_prompt(build_quiz_content):
     prompts = " ".join(q["prompt"] for q in updated["questions"]).lower()
     assert "photosynthesis" in title or "photosynthesis" in prompts
 
-
+# Verify generated quizzes are persisted and stripped of answer keys in public payload.
 def test_generate_quiz_creates_quiz_and_returns_public(
     client, monkeypatch, build_quiz_content
 ):
@@ -47,7 +48,7 @@ def test_generate_quiz_creates_quiz_and_returns_public(
     quiz_ids = {quiz["id"] for quiz in list_response.json()}
     assert payload["id"] in quiz_ids
 
-
+# Reject quizzes where any question has fewer than four options.
 def test_quiz_rejects_invalid_option_count(client, build_quiz_content):
     user_response = client.post(
         "/users",
@@ -74,7 +75,7 @@ def test_quiz_rejects_invalid_option_count(client, build_quiz_content):
     assert quiz_response.status_code == 400
     assert quiz_response.json()["detail"] == "each question must include 4 options"
 
-
+# Reject quizzes where the correct option key is not among A-D.
 def test_quiz_rejects_invalid_correct_option(client, build_quiz_content):
     user_response = client.post(
         "/users",
@@ -100,7 +101,7 @@ def test_quiz_rejects_invalid_correct_option(client, build_quiz_content):
         == "correct_option_key must match one of the option keys"
     )
 
-
+# Enforce a 1-3 word limit for quiz generation prompts.
 def test_generate_quiz_rejects_long_prompt(client):
     user_response = client.post(
         "/users",
@@ -116,7 +117,7 @@ def test_generate_quiz_rejects_long_prompt(client):
     assert quiz_response.status_code == 400
     assert quiz_response.json()["detail"] == "prompt must be 1-3 words"
 
-
+# Return a helpful message when web scraping fails with an HTTP error.
 def test_scrape_web_page_handles_http_error(monkeypatch):
     from urllib.error import HTTPError
 

@@ -1,3 +1,4 @@
+<!-- Quiz taking page. -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -9,7 +10,9 @@
   </head>
   <body data-page="quiz">
     <main>
+      <!-- Quiz taking layout -->
       <section class="card reveal">
+        <!-- Header toolbar with quiz status -->
         <div class="toolbar">
           <div>
             <p class="status-pill">Quiz In Progress</p>
@@ -20,11 +23,13 @@
           </div>
         </div>
         <p class="subhead">Question <strong data-counter>1/5</strong></p>
+        <!-- Active question panel -->
         <div class="panel stack">
           <p data-question>Loading question...</p>
           <div class="stack" data-options></div>
         </div>
         <div class="feedback" data-feedback>Choose an answer to see the explanation.</div>
+        <!-- Navigation actions -->
         <div class="toolbar">
           <button class="btn btn-primary" type="button" data-submit-answer>
             Submit answer
